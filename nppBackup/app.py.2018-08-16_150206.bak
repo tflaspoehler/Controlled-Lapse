@@ -1,0 +1,108 @@
+# ================
+#     GUI class
+# ================
+# -----------------
+# threading library
+import threading
+# ---------------------
+# GUI-related libraries 
+from  Tkinter import *
+import Tkinter, Tkconstants, tkFileDialog
+# -----------------
+# better fonts
+import ttk, tkFont
+# -----------------------
+# python image library
+from PIL import Image, ImageTk, ImageDraw, ExifTags
+# -----------------------
+# basic pythong libraries
+from math import *
+import os, sys, time, unicodedata
+# -----------------------
+# probably need numeric pythong
+import numpy as np
+# -----------------------
+
+        
+# ================
+#   image class
+# ================
+class image_class(Frame):
+    def __init__(self, filename):
+        self.filename = filename
+        self.id = int(unicodedata.normalize('NFKD', filename).encode('ascii', 'ignore').split(".")[:-1][0])
+# -----------------
+        
+# ===================
+#   image bar class
+# ===================
+class image_bar_class():
+    def __init__(self, files, parent):
+        self.parent = parentself.fig = plt.figure(
+    
+# -------------------
+        
+# ================
+#     GUI class
+# inherent from tk
+# ================
+# -----------------
+class root_gui_class(Tk):
+    def __init__(self, event_caller):
+    
+        ## ------------------------------------
+        ##  start tkinter window and title
+        time.sleep(1)
+        Tk.__init__(self)
+        self.event_caller = event_caller
+        self.title("Controlled Lapse")
+        self.minsize(300, 300)
+        self.geometry("800x600")
+        os.chdir(os.getcwd())
+        ## ------------------------------------
+        
+        ## ------------------------------------
+        ## Menu Bar
+        self.menu_bar = Menu(self)
+        # -- File Menu
+        self.file_menu = Menu(self.menu_bar, tearoff=0)
+        self.file_menu.add_command(label="Open", command=lambda: self.load_directory())
+        self.file_menu.add_command(label="Exit", command=self.quit)
+        self.menu_bar.add_cascade(label="File", menu=self.file_menu)
+        self.config(menu=self.menu_bar)
+        ## ------------------------------------
+        
+        ## ------------------------------------
+        ##  create paned window that should 
+        ##      cover everything in view
+        self.window = PanedWindow(self, orient=VERTICAL, sashwidth=5, bg="#888888", opaqueresize=FALSE)
+        ## ------------------------------------
+
+    def load_directory(self):
+        self.directory = tkFileDialog.askdirectory()
+        os.chdir(self.directory)
+        self.files = [image_class(file) for file in os.listdir(self.directory) if '.jpg' in file]
+        self.image_bar = image_bar_class(self.files)
+## ====================================
+
+# ==========================
+# main initializing function
+# ==========================
+def main():
+
+    # create event caller for threads
+    event_caller = threading.Event()
+
+    # initialize GUI
+    root = root_gui_class(event_caller)
+    root.load_directory()
+
+    # start GUI mainloop
+    root.mainloop()
+
+# ================
+# start everything
+# ----------------
+main()
+# ----------------
+# ================

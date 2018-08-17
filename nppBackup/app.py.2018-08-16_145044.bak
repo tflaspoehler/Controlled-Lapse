@@ -1,0 +1,92 @@
+# ================
+#     GUI class
+# ================
+# -----------------
+# threading library
+import threading
+# ---------------------
+# GUI-related libraries 
+from  Tkinter import *
+import Tkinter, Tkconstants, tkFileDialog
+# -----------------
+# better fonts
+import ttk, tkFont
+# -----------------------
+# python image library
+from PIL import Image, ImageTk, ImageDraw, ExifTags
+# -----------------------
+# basic pythong libraries
+from math import *
+import os, sys, time, unicodedata
+# -----------------------
+# probably need numeric pythong
+import numpy as np
+# -----------------------
+
+        
+# ================
+#   image class
+# ================
+class image_class():
+    def __init__(self, filename):
+        self.filename = filename
+        img = Image.open(filename)
+        exif = { ExifTags.TAGS[k]: v for k, v in img._getexif().items() if k in ExifTags.TAGS }
+# -----------------
+        
+# ================
+#     GUI class
+# inherent from tk
+# ================
+# -----------------
+class root_gui_class(Tk):
+    def __init__(self, event_caller):
+        ## ====================================
+        ##  start tkinter window and title
+        ## ------------------------------------
+        time.sleep(1)
+        Tk.__init__(self)
+        self.event_caller = event_caller
+        self.title("Controlled Lapse")
+        self.minsize(300, 300)
+        self.geometry("800x600")
+        os.chdir(os.getcwd())
+        ## ------------------------------------
+        ## Menu Bar
+        self.menu_bar = Menu(self)
+        # -- File Menu
+        self.file_menu = Menu(self.menu_bar, tearoff=0)
+        self.file_menu.add_command(label="Open", command=lambda: self.load_directory())
+        self.file_menu.add_command(label="Exit", command=self.quit)
+        self.menu_bar.add_cascade(label="File", menu=self.file_menu)
+        self.config(menu=self.menu_bar)
+        ## ------------------------------------
+
+    def load_directory(self):
+        self.directory = tkFileDialog.askdirectory()
+        os.chdir(self.directory)
+        self.files = [file for file in os.listdir(self.directory) if '.jpg' in file]
+        print image_class(self.files[0])
+## ====================================
+
+# ==========================
+# main initializing function
+# ==========================
+def main():
+
+    # create event caller for threads
+    event_caller = threading.Event()
+
+    # initialize GUI
+    root = root_gui_class(event_caller)
+    root.load_directory()
+
+    # start GUI mainloop
+    root.mainloop()
+
+# ================
+# start everything
+# ----------------
+main()
+# ----------------
+# ================

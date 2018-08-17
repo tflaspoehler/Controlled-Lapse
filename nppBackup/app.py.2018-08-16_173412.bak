@@ -1,0 +1,169 @@
+# ================
+#     GUI class
+# ================
+# -----------------
+# threading library
+import threading
+# ---------------------
+# GUI-related libraries 
+from  Tkinter import *
+import Tkinter, Tkconstants, tkFileDialog
+# -----------------
+# better fonts
+import ttk, tkFont
+# -----------------------
+# python image library
+from PIL import Image, ImageTk, ImageDraw, ExifTags
+# -----------------------
+# basic pythong libraries
+from math import *
+import os, sys, time, unicodedata, operator
+# -----------------------
+# probably need numeric pythong
+import numpy as np
+# -----------------------
+
+        
+# ================
+#   image class
+# ================
+class image_class():
+    def __init__(self, filename):
+        self.filename = filename
+        self.id = int(unicodedata.normalize('NFKD', filename).encode('ascii', 'ignore').split(".")[:-1][0])
+
+# -----------------
+        
+# ===================
+#   image bar class
+# ===================
+class image_bar_class(Frame):
+    def __init__(self, images, parent):
+        ###self.parent = parentself.fig = plt.figure()
+        self.parent = parent
+        self.images = images
+        self.draw(images)
+        
+    def draw(self, images):
+        Frame.__init__(self, self.parent, bg='black')
+        self.image_canvas = []
+        height = self.parent.winfo_height()
+        width = self.parent.winfo_width()
+        img = Image.open(images[0].filename)
+        image_width  = img.width * height / img.height
+        n = int(ceil(float(width) / float(image_width)))
+        print 'adding ' + repr(n) + ' images'
+        column = 1
+        for i in range(0, len(images), len(images)/n):
+            img = Image.open(images[i].filename)
+            img = img.resize((img.width * height / img.height, height), Image.ANTIALIAS)
+            self.image_canvas.append(ImageTk.PhotoImage(img))
+            Label(self, image=self.image_canvas[-1], 
+                        text=repr(images[i].id),
+                        borderwidth=0,
+                        compound="center",
+                        highlightthickness = 0,
+                        padx=0,
+                        pady=0).grid(row=0, column=column)
+            column += 1
+        self.pack(fill=BOTH)
+    
+# -------------------
+        
+# ================
+#     GUI class
+# inherent from tk
+# ================
+# -----------------
+class root_gui_class(Tk):
+    def __init__(self, event_caller):
+    
+        ## ------------------------------------
+        ##  start tkinter window and title
+        time.sleep(1)
+        Tk.__init__(self)
+        self.event_caller = event_caller
+        self.title("Controlled Lapse")
+        self.minsize(300, 300)
+        self.geometry("800x600")
+        os.chdir(os.getcwd())
+        self.width = 800
+        self.height = 600
+        ## ------------------------------------
+        
+        ## ------------------------------------
+        ## Menu Bar
+        self.files = []
+        self.menu_bar = Menu(self)
+        # -- File Menu
+        self.file_menu = Menu(self.menu_bar, tearoff=0)
+        self.file_menu.add_command(label="Open", command=lambda: self.load_directory())
+        self.file_menu.add_command(label="Exit", command=self.quit)
+        self.menu_bar.add_cascade(label="File", menu=self.file_menu)
+        self.config(menu=self.menu_bar)
+        ## ------------------------------------
+        
+        ## ------------------------------------
+        ##  create paned window that should 
+        ##      cover everything in view
+        self.window = PanedWindow(self, orient=VERTICAL, sashwidth=5, bg="#888888", opaqueresize=FALSE)
+        self.window.pack(fill=BOTH, expand=1)
+        ## ------------------------------------
+        
+        ## ------------------------------------
+        ##  add middle viewer
+        self.viewer = Frame(self.window)
+        self.window.add(self.viewer, stretch="always")
+        ## ------------------------------------
+        
+        ## ------------------------------------
+        ##  add timeline viewer
+        self.timeline = Frame(self.window)
+        self.window.add(self.timeline, height=75, stretch="never")
+        self.resize = None
+        self.window.bind('<Configure>', self.schedule_resize)
+        ## ------------------------------------
+
+    def load_directory(self):
+        self.directory = tkFileDialog.askdirectory()
+        os.chdir(self.directory)
+        self.files = [image_class(file) for file in os.listdir(self.directory) if '.jpg' in file]
+        self.files.sort(key=operator.attrgetter('id'))
+        for i in range(0, len(self.files)):
+            self.files[i].id = i
+        self.image_bar = image_bar_class(self.files, self.timeline)
+        self.timeline.update()
+        
+    def schedule_resize(self, event):
+        if (self.height == event.height and self.width == event.width):
+            print event.width, event.height
+            
+    def on_resize(self):
+        for widget in self.timeline.winfo_children():
+            widget.destroy()
+        if (len(self.files) > 0):
+            self.image_bar = image_bar_class(self.files, self.timeline)
+        self.resize = None
+## ====================================
+
+# ==========================
+# main initializing function
+# ==========================
+def main():
+
+    # create event caller for threads
+    event_caller = threading.Event()
+
+    # initialize GUI
+    root = root_gui_class(event_caller)
+    root.load_directory()
+
+    # start GUI mainloop
+    root.mainloop()
+
+# ================
+# start everything
+# ----------------
+main()
+# ----------------
+# ================

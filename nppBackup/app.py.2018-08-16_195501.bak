@@ -1,0 +1,245 @@
+# ================
+#     GUI class
+# ================
+# -----------------
+# threading library
+import threading
+# ---------------------
+# GUI-related libraries 
+from  Tkinter import *
+import Tkinter, Tkconstants, tkFileDialog
+# -----------------
+# better fonts
+import ttk, tkFont
+# -----------------------
+# python image library
+from PIL import Image, ImageTk, ImageDraw, ExifTags
+# -----------------------
+# basic pythong libraries
+from math import *
+import os, sys, time, unicodedata, operator
+# -----------------------
+# probably need numeric pythong
+import numpy as np
+# -----------------------
+
+        
+# ================
+#   image class
+# ================
+class image_class():
+    def __init__(self, filename):
+        self.filename = filename
+        self.id = int(unicodedata.normalize('NFKD', filename).encode('ascii', 'ignore').split(".")[:-1][0])
+# -----------------
+        
+# ===================
+#   image bar class
+# ===================
+class image_bar_class(Frame):
+    def __init__(self, images, parent, root):
+        ###self.parent = parentself.fig = plt.figure()
+        self.root = root
+        self.parent = parent
+        self.images = images
+        self.line = None
+        self.zoom = 1.0
+        self.draw(images)
+        
+    def draw(self, images):
+    
+        Frame.__init__(self, self.parent, bg='black')
+        self.image_canvas = []
+        
+        print 'creating scrollbar'
+        self.scroll = Scrollbar(self, orient=HORIZONTAL)
+        self.scroll.pack(fill=X, side=BOTTOM, expand=FALSE)
+        print 'creating canvas'
+        self.canvas = Canvas(self, bd=0, highlightthickness=0, xscrollcommand=self.scroll.set)
+        self.canvas.pack(side=LEFT, fill=BOTH, expand=TRUE)
+        print 'configuring scrollbar'
+        self.scroll.config(command=self.canvas.xview)
+        
+        print vars(self.scroll)
+        print self.scroll.__dict__
+        height = self.parent.winfo_height() - self.scroll.winfo_height()
+        width = self.parent.winfo_width()
+        img = Image.open(images[0].filename)
+        image_width  = img.width * height / img.height
+        n = int(ceil(self.zoom * float(width) / float(image_width)))
+        column = 1
+        labels = []
+        
+        for i in range(0, len(images), len(images)/n):
+            img = Image.open(images[i].filename)
+            img = img.resize((img.width * height / img.height, height), Image.ANTIALIAS)
+            self.image_canvas.append(ImageTk.PhotoImage(img))
+            labels.append(Label(self.canvas, image=self.image_canvas[-1], 
+                                ## text=repr(images[i].id),
+                                borderwidth=0,
+                                compound="center",
+                                highlightthickness = 0,
+                                padx=0,
+                                pady=0).grid(row=0, column=column))
+            column += 1
+        self.pack(fill=BOTH)
+        self.parent.update_idletasks()
+        self.width = Frame.winfo_width(self)
+        
+    def click(self, event):
+        x = self.parent.winfo_pointerx() - self.parent.winfo_rootx()
+        percent = float(len(self.images))*float(x)/float(self.width)
+        if (percent > len(self.images)):
+            percent = len(self.images)
+        elif (percent < 1):
+            percent = 1
+        ## self.canvas = Canvas(self)
+        ## self.canvas.pack(fill=BOTH, expand=1)
+        ## self.line = self.canvas.create_line(0, 10, 0, 10)
+        self.root.show_image(self.images[int(percent)-1])
+# -------------------
+        
+# ================
+#     GUI class
+# inherent from tk
+# ================
+# -----------------
+class root_gui_class(Tk):
+    def __init__(self, event_caller):
+    
+        ## ------------------------------------
+        ##  start tkinter window and title
+        time.sleep(1)
+        Tk.__init__(self)
+        self.event_caller = event_caller
+        self.title("Controlled Lapse")
+        self.minsize(300, 300)
+        self.geometry("800x600")
+        os.chdir(os.getcwd())
+        self.width = 800
+        self.height = 600
+        ## ------------------------------------
+        
+        ## ------------------------------------
+        ## Menu Bar
+        self.files = []
+        self.menu_bar = Menu(self)
+        # -- File Menu
+        self.file_menu = Menu(self.menu_bar, tearoff=0)
+        self.file_menu.add_command(label="Open", command=lambda: self.load_directory())
+        self.file_menu.add_command(label="Exit", command=self.quit)
+        self.menu_bar.add_cascade(label="File", menu=self.file_menu)
+        self.config(menu=self.menu_bar)
+        ## ------------------------------------
+        
+        ## ------------------------------------
+        ##  create paned window that should 
+        ##      cover everything in view
+        self.window = PanedWindow(self, orient=VERTICAL, sashwidth=5, bg="#888888", opaqueresize=FALSE)
+        self.window.pack(fill=BOTH, expand=1)
+        self.window.bind('<B1-Motion>', self.window_click)
+        ## ------------------------------------
+        
+        ## ------------------------------------
+        ##  add middle viewer
+        self.viewer = Frame(self.window)
+        Canvas(self.viewer)
+        self.window.add(self.viewer, stretch="always")
+        ## ------------------------------------
+        
+        ## ------------------------------------
+        ##  add timeline viewer
+        self.timeline = Frame(self.window)
+        self.window.add(self.timeline, height=75, stretch="never")
+        self.resize = ''
+        ## self.bind('<Enter>', self.on_resize)
+        ## ------------------------------------
+        self.bind('<Configure>', self.schedule_resize)
+
+    def load_directory(self):
+        self.directory = tkFileDialog.askdirectory()
+        os.chdir(self.directory)
+        self.files = []
+        for file in os.listdir(self.directory):
+            if '.jpg' in file:
+                try:
+                    Image.open(file)
+                    self.files.append(image_class(file))
+                except:
+                    print 'could not open', file
+        self.files.sort(key=operator.attrgetter('id'))
+        for i in range(0, len(self.files)):
+            self.files[i].id = i
+        self.image_bar = image_bar_class(self.files, self.timeline, self)
+        self.bind('<B1-Motion>', self.image_bar.click)
+        self.timeline.update()
+        
+##     def schedule_resize(self, event):
+##         print self.width, self.height, event.width, event.height
+##         if (self.height == event.height and self.width == event.width):
+##             print event.width, event.height
+##         else:
+##             self.width = event.width
+##             self.height = event.height
+##             self.resize = True
+    
+    def show_image(self, image):
+        for widget in self.viewer.winfo_children():
+            widget.destroy()
+        self.image = ImageTk.PhotoImage(Image.open(image.filename))
+        Label(self.viewer, image=self.image,
+                          borderwidth=0,
+                          compound="center",
+                          highlightthickness = 0,
+                          padx=0,
+                          pady=0).pack(fill=Y)
+        self.viewer.update_idletasks()
+        
+    def window_click(self, event):
+        print 'event', event.x, event.y
+        if event.widget is self.window:
+            if self.resize == '':
+                pass
+            else:
+                self.after_cancel(self.resize)
+            self.resize = self.after(200, self.on_resize)
+            
+    def schedule_resize(self, event):
+        if event.widget is self:
+            if self.resize == '':
+                pass
+            else:
+                self.after_cancel(self.resize)
+            self.resize = self.after(200, self.on_resize)
+            
+            
+    def on_resize(self):
+        if (self.resize != ''):
+            for widget in self.timeline.winfo_children():
+                widget.destroy()
+            if (len(self.files) > 0):
+                self.image_bar = image_bar_class(self.files, self.timeline, self)
+            self.resize = ''
+## ====================================
+
+# ==========================
+# main initializing function
+# ==========================
+def main():
+
+    # create event caller for threads
+    event_caller = threading.Event()
+
+    # initialize GUI
+    root = root_gui_class(event_caller)
+    root.load_directory()
+
+    # start GUI mainloop
+    root.mainloop()
+
+# ================
+# start everything
+# ----------------
+main()
+# ----------------
+# ================

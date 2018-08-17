@@ -1,0 +1,97 @@
+# ================
+#     GUI class
+# ================
+# -----------------
+# threading library
+import threading
+# ---------------------
+# GUI-related libraries 
+from  Tkinter import *
+import Tkinter, Tkconstants, tkFileDialog
+# -----------------
+# better fonts
+import ttk, tkFont
+# -----------------------
+# python image library
+from PIL import Image, ImageTk, ImageDraw
+# -----------------------
+# basic pythong libraries
+from math import *
+import os, sys, time
+# -----------------------
+# probably need numeric pythong
+import numpy as np
+# -----------------------
+
+        
+# ================
+#     GUI class
+# inherent from tk
+# ================
+# -----------------
+class root_gui_class(Tk):
+    def __init__(self, event_caller):
+        ## ====================================
+        ## ------------------------------------
+        time.sleep(1)
+        Tk.__init__(self)
+        self.event_caller = event_caller
+        self.title("MCNP meshtal plotter")
+        self.minsize(300, 300)
+        self.geometry("800x600")
+        os.chdir(os.getcwd())
+        ## ------------------------------------
+        ## Menu Bar
+        self.menu_bar = Menu(root)
+        # -- File Menu
+        self.file_menu = Menu(self.menu_bar, tearoff=0)
+        self.file_menu.add_command(label="Open", command=lambda: self.load_directory())
+        self.file_menu.add_command(label="Exit", command=self.quit)
+        self.menu_bar.add_cascade(label="File", menu=self.file_menu)
+        self.config(menu=self.menu_bar)
+        ## ------------------------------------
+        
+        
+        ## ------------------------------------
+        ## images = load_images('images')
+        ## print images
+        ## ====================================
+        ## Define Resize Event
+        ##root.bind( "<Configure>", resize_canvas )
+        ## root.bind("<<redraw>>", update_canvas)
+        ## root.bind("<<save_plane>>", save_plane)
+        ## root.bind_all('<Alt-s>',save_image)
+        ## root.bind("<<newfile>>", navigation_bar.update)
+        ## root.bind("<Control-c>", save_image)
+        ## ====================================
+
+    def load_directory(self):
+        self.directory = tkFileDialog.askdirectory()
+        self.files = [i for i in os.listdir(self.directory) if '.jpg' in i]
+        print files
+
+
+def load_images(directory):
+    return files
+## ====================================
+
+# ==========================
+# main initializing function
+# ==========================
+def main():
+
+    # create event caller for threads
+    event_caller = threading.Event()
+
+    # initialize GUI
+    root = root_gui_class(event_caller)
+
+    # start GUI mainloop
+    root.mainloop()
+
+# ================
+# start everything
+# ----------------
+main()
+# ----------------
+# ================

@@ -1,0 +1,67 @@
+from Tkinter import *
+import ttk, tkFont
+from PIL import Image, ImageTk, ImageDraw
+
+from math import *
+import os, sys, time
+
+import numpy as np
+
+def load_images(directory):
+    files = [i for i in os.listdir(directory) if '.jpg' in i]
+    return files
+
+## ====================================
+##  initialize tkinter 
+## ====================================
+root = Tk()
+## ====================================
+
+
+## ====================================
+## Initializing Function
+## ====================================
+def main():
+    ## ====================================
+    ## ------------------------------------
+    time.sleep(1)
+    ## Organize tkinter Areas on Screen
+    root.title("myPlotter")
+    root.minsize(300,300)
+    root.geometry("800x600")
+    ## ------------------------------------
+    ## Menu Bar
+    menu_bar = Menu(root)
+    # -- File Menu
+    file_menu = Menu(menu_bar, tearoff=0)
+    file_menu.add_command(label="Exit", command=root.quit)
+    menu_bar.add_cascade(label="File",menu=file_menu)
+    root.config(menu=menu_bar)
+    ## ------------------------------------
+    
+    
+    ## ------------------------------------
+    images = load_images('./images')
+    print images
+    ## ====================================
+    ## Define Resize Event
+    ##root.bind( "<Configure>", resize_canvas )
+    ## root.bind("<<redraw>>", update_canvas)
+    ## root.bind("<<save_image>>", save_image)
+    ## root.bind("<<save_plane>>", save_plane)
+    ## root.bind_all('<Alt-s>',save_image)
+    ## root.bind("<<newfile>>", navigation_bar.update)
+    ## root.bind("<Control-c>", save_image)
+    ## ====================================
+
+
+    
+    ## ====================================
+    ## Start TKINTER
+    root.mainloop()
+## ====================================
+
+## ====================================
+##  run application
+## ====================================
+main()
