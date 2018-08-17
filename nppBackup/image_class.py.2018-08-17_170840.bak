@@ -1,4 +1,7 @@
 # -----------------------
+# python image library
+from PIL import Image, ImageTk, ImageDraw, ExifTags
+# -----------------------
 import unicodedata
 # -----------------------
 

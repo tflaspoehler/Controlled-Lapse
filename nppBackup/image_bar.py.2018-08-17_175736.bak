@@ -25,6 +25,8 @@ class image_bar_class(Frame):
         self.images = images
         self.line = None
         self.zoom = zoom
+        if int(float(len(self.images))/self.zoom) < 1:
+            self.zoom = 1.0
         self.draw(images)
         
     def draw(self, images):

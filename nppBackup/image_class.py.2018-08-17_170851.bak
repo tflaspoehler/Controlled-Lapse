@@ -1,4 +1,7 @@
 # -----------------------
+# python image library
+import PIL.Image
+# -----------------------
 import unicodedata
 # -----------------------
 

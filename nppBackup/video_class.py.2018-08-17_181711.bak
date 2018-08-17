@@ -12,18 +12,14 @@ from PIL import Image, ImageTk, ImageDraw, ExifTags
 video = 'C:\Program Files\ffmpeg\bin\ffmpeg.exe'
 
 class video_class(Frame):
-    def __init__(self, id, files, parent, root, active, rate=200):
+    def __init__(self, id, files, parent, root, rate=200):
         self.id = id
         self.parent = parent
         self.files = files
         self.root = root
-        self.active = active
         self.draw()
         
     def draw(self):
-        self.bg = 'black'
-        if self.active:
-            self.bg = '#035'
         print 'video class files', len(self.files)
         img = Image.open(self.files[len(self.files)/2].filename)
         self.image = ImageTk.PhotoImage(img.resize((100, img.height * (100) / img.width), Image.ANTIALIAS))
@@ -33,7 +29,7 @@ class video_class(Frame):
                             highlightthickness = 0,
                             width=100+10,
                             height=10 + (img.height * (100) / img.width),
-                            bg=self.bg)
+                            bg='black')
         self.label.bind('<ButtonPress-1>', self.click)
         self.label.bind('<Enter>', self.enter)
         self.label.bind('<Leave>', self.leave)
@@ -44,5 +40,5 @@ class video_class(Frame):
     def enter(self, event):
         self.label.configure(bg='#acf')
     def leave(self, event):
-        self.label.configure(bg=self.bg)
+        self.label.configure(bg='black')
 # -----------------

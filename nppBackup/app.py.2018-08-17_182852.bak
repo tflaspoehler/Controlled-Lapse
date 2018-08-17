@@ -192,7 +192,6 @@ class root_gui_class(Tk):
             self.active_video += 1  
             for i in range(0, len(files)):
                 files[i].id = i
-            self.files = self.files[:self.view_image_id]
             self.files.append(files)
             for widget in self.clips.winfo_children():
                 widget.destroy()

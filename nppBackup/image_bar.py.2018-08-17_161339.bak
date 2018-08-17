@@ -18,30 +18,23 @@ import os, sys, time, unicodedata, operator
 #   image bar class
 # ===================
 class image_bar_class(Frame):
-    def __init__(self, images, parent, root, zoom=10.0):
+    def __init__(self, images, parent, root):
         ###self.parent = parentself.fig = plt.figure()
         self.root = root
         self.parent = parent
         self.images = images
         self.line = None
-        self.zoom = zoom
+        self.zoom = 10.0
         self.draw(images)
         
     def draw(self, images):
         Frame.__init__(self, self.parent, bg='black')
         
-        height = self.parent.winfo_height() - 17
-        width = self.parent.winfo_width()
-        self.window_width = width
-        img = Image.open(images[0].filename)
-        image_width  = img.width * height / img.height
-        n = max(1, int(ceil(self.zoom * float(width) / float(image_width))))
-        
         self.reel = Canvas(self, width=int(float(self.root.winfo_width())), height=self.parent.winfo_height())
         self.scroll = Scrollbar(self, orient=HORIZONTAL, command=self.reel.xview)
                 
         self.reel.configure(xscrollcommand=self.scroll.set)
-        self.reel.configure(scrollregion=(0, 0, n*image_width, self.parent.winfo_height()))
+        self.reel.configure(scrollregion=(0, 0, int(float(self.root.winfo_width())*self.zoom), self.parent.winfo_height()))
         
         self.scroll.pack(fill=BOTH, expand=TRUE)
         self.reel.pack(fill=Y, expand=TRUE)
@@ -49,12 +42,16 @@ class image_bar_class(Frame):
         self.roll = Frame(self.reel, bg='black')
         self.roll.pack(fill=BOTH, expand=TRUE)
         self.reel.create_window((0, 0), window=self.roll, anchor="nw", tags="self.roll")
-        
+        height = self.parent.winfo_height() - 17
+        width = self.parent.winfo_width()
+        self.window_width = width
+        img = Image.open(images[0].filename)
+        image_width  = img.width * height / img.height
+        n = int(ceil(self.zoom * float(width) / float(image_width)))
         column = 1
         self.labels = []
         self.image_canvas = []
-        print len(images), n, len(images)/n
-        for i in range(0, len(images), max(len(images)/n, 1)):
+        for i in range(0, len(images), len(images)/n):
             img = Image.open(images[i].filename)
             img = img.resize((img.width * height / img.height, height), Image.ANTIALIAS)
             self.image_canvas.append(ImageTk.PhotoImage(img))

@@ -1,0 +1,34 @@
+# ---------------------
+# GUI-related libraries 
+from  Tkinter import *
+# -----------------------
+# python image library
+from PIL import Image, ImageTk, ImageDraw, ExifTags
+# -----------------------
+
+# ===================
+#    video class
+# ===================
+video = 'C:\Program Files\ffmpeg\bin\ffmpeg.exe'
+
+class video_class(Frame):
+    def __init__(self, files, parent, rate=200):
+        self.parent = parent
+        self.files = files
+        self.draw()
+        
+    def draw(self):
+        img = Image.open(self.files[len(self.files)/2].filename)
+        self.image = ImageTk.PhotoImage(img.resize((self.parent.winfo_width()-50, img.height * (self.parent.winfo_width()-50) / img.width), Image.ANTIALIAS))
+        self.label = Label(self.parent, image=self.image,
+                            borderwidth=0,
+                            compound="center",
+                            highlightthickness = 0,
+                            padx=0,
+                            pady=0,)
+        self.label.bind('<Button-1>', this.click)
+        self.label.pack(fill=X)
+        
+    def click(self, event):
+        pass
+# -----------------

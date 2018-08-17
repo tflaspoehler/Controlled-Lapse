@@ -1,0 +1,12 @@
+# ===================
+#    video class
+# ===================
+class video_class(Frame):
+    def __init__(self, files, parent, rate=200):
+        self.root = root
+        self.parent = parent
+        self.images = images
+        self.line = None
+        self.zoom = zoom
+        self.draw(images)
+# -----------------

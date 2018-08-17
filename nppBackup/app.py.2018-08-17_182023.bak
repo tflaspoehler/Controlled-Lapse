@@ -189,13 +189,9 @@ class root_gui_class(Tk):
             files = self.videos[self.active_video].files[self.view_image_id:]
             self.videos[self.active_video].files = self.videos[self.active_video].files[:self.view_image_id]
             self.videos.insert(self.active_video+1, video_class(self.active_video+1, files, self.clips, self, True))
-            self.active_video += 1  
             for i in range(0, len(files)):
                 files[i].id = i
-            self.files = self.files[:self.view_image_id]
             self.files.append(files)
-            for widget in self.clips.winfo_children():
-                widget.destroy()
             for i in range(0, len(self.videos)):
                 if i == self.active_video:
                     self.videos[i].active = True
@@ -203,6 +199,7 @@ class root_gui_class(Tk):
                     self.videos[i].active = False
                 self.videos[i].draw()
             self.clips.update()
+            self.active_video += 1  
             self.view_image_id = len(self.files[self.active_video])/2
             ## ------------------------------------
             ##  destroy and create new image_bar_class
@@ -217,27 +214,7 @@ class root_gui_class(Tk):
     
     def select_video(self, id):
         print 'changing video', id
-        self.active_video = id
-        for widget in self.clips.winfo_children():
-            widget.destroy()
-        for i in range(0, len(self.videos)):
-            if i == self.active_video:
-                self.videos[i].active = True
-            else:
-                self.videos[i].active = False
-            self.videos[i].draw()
-        self.clips.update()
-        self.view_image_id = len(self.files[self.active_video])/2
-        ## ------------------------------------
-        ##  destroy and create new image_bar_class
-        if (len(self.files) > 0):
-            print 'creating new image_bar'
-            for widget in self.timeline.winfo_children():
-                widget.destroy()
-            self.image_bar = image_bar_class(self.files[self.active_video], self.timeline, self)
-            self.image_bar.pack(fill=BOTH)
-            ## self.bind('<B1-Motion>',  self.image_bar.click)
-        ## ------------------------------------
+        
     
     def window_click(self, event):
         if event.widget is self.window:

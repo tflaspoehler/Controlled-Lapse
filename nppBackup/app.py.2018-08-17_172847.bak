@@ -134,7 +134,7 @@ class root_gui_class(Tk):
         if len(files) > 1:
             ##  sort numerically and rename in order
             files.sort(key=operator.attrgetter('id'))
-            for i in range(0, len(files)):
+            for i in range(0, len(self.files)):
                 files[i].id = i
             self.files.append(files)
             ## ------------------------------------
@@ -145,7 +145,7 @@ class root_gui_class(Tk):
                 for widget in self.timeline.winfo_children():
                     widget.destroy()
                     
-            self.image_bar = image_bar_class(self.files[self.active_video], self.timeline, self)
+            self.image_bar = image_bar_class(self.files[-1], self.timeline, self)
             self.image_bar.pack(fill=BOTH)
             ## self.bind('<B1-Motion>',  self.image_bar.click)
             self.image_bar.bind('<MouseWheel>', self.image_bar.wheel)
@@ -153,19 +153,10 @@ class root_gui_class(Tk):
             
             ## ------------------------------------
             ##  update main viewer
-            self.show_image(self.files[-1][len(self.files[-1])/2])
+            self.show_image(self.files[-1][len(self.files)/2])
             print 'active video plus 1'
             self.active_video += 1
-            self.videos.append(video_class(self.active_video, self.files[self.active_video], self.clips, self, True))
-            for widget in self.clips.winfo_children():
-                widget.destroy()
-            for i in range(0, len(self.videos)):
-                if i == self.active_video:
-                    self.videos[i].active = True
-                else:
-                    self.videos[i].active = False
-                self.videos[i].draw()
-            self.clips.update()
+            self.videos.append(video_class(self.files[-1], self.clips))
             self.timeline.update()
             ## ------------------------------------
     
@@ -185,60 +176,30 @@ class root_gui_class(Tk):
         self.view_image_label.pack(fill=BOTH, expand=TRUE)
         
     def splice(self):
+        print 'attempting splice on', self.active_video
         if self.active_video > -1:
-            files = self.videos[self.active_video].files[self.view_image_id:]
+            print 'splicing active video'
+            videos = self.videos[self.active_video].files[self.view_image_id:]
             self.videos[self.active_video].files = self.videos[self.active_video].files[:self.view_image_id]
-            self.videos.insert(self.active_video+1, video_class(self.active_video+1, files, self.clips, self, True))
-            self.active_video += 1  
-            for i in range(0, len(files)):
-                files[i].id = i
-            self.files = self.files[:self.view_image_id]
-            self.files.append(files)
+            self.videos.insert(self.active_video, video_class(files, self.clips))
             for widget in self.clips.winfo_children():
                 widget.destroy()
-            for i in range(0, len(self.videos)):
-                if i == self.active_video:
-                    self.videos[i].active = True
-                else:
-                    self.videos[i].active = False
-                self.videos[i].draw()
+            for video in self.videos:
+                video.draw()
             self.clips.update()
-            self.view_image_id = len(self.files[self.active_video])/2
-            ## ------------------------------------
-            ##  destroy and create new image_bar_class
-            if (len(self.files) > 0):
-                print 'creating new image_bar'
-                for widget in self.timeline.winfo_children():
-                    widget.destroy()
-                self.image_bar = image_bar_class(self.files[self.active_video], self.timeline, self)
-                self.image_bar.pack(fill=BOTH)
-                ## self.bind('<B1-Motion>',  self.image_bar.click)
-            ## ------------------------------------
-    
-    def select_video(self, id):
-        print 'changing video', id
-        self.active_video = id
-        for widget in self.clips.winfo_children():
-            widget.destroy()
-        for i in range(0, len(self.videos)):
-            if i == self.active_video:
-                self.videos[i].active = True
-            else:
-                self.videos[i].active = False
-            self.videos[i].draw()
-        self.clips.update()
-        self.view_image_id = len(self.files[self.active_video])/2
-        ## ------------------------------------
-        ##  destroy and create new image_bar_class
-        if (len(self.files) > 0):
-            print 'creating new image_bar'
-            for widget in self.timeline.winfo_children():
-                widget.destroy()
-            self.image_bar = image_bar_class(self.files[self.active_video], self.timeline, self)
-            self.image_bar.pack(fill=BOTH)
-            ## self.bind('<B1-Motion>',  self.image_bar.click)
-        ## ------------------------------------
-    
+        
+        
+    def add_video(self, files):
+        img = PIL.Image.open(files[len(files)/2].filename)
+        self.videos.append(ImageTk.PhotoImage(img.resize((self.clips.winfo_width()-50, img.height * (self.clips.winfo_width()-50) / img.width), Image.ANTIALIAS)))
+        self.video_labels.append(Label(self.clips, image=self.videos[-1],
+                          borderwidth=0,
+                          compound="center",
+                          highlightthickness = 0,
+                          padx=0,
+                          pady=0,))
+        self.video_labels[-1].pack(fill=X)
+        
     def window_click(self, event):
         if event.widget is self.window:
             if self.resize == '':
@@ -265,7 +226,7 @@ class root_gui_class(Tk):
                 print 'creating new image_bar'
                 for widget in self.timeline.winfo_children():
                     widget.destroy()
-                self.image_bar = image_bar_class(self.files[self.active_video], self.timeline, self)
+                self.image_bar = image_bar_class(self.files[-1], self.timeline, self)
                 self.image_bar.pack(fill=BOTH)
                 ## self.bind('<B1-Motion>',  self.image_bar.click)
             ## ------------------------------------

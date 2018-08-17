@@ -21,9 +21,6 @@ class video_class(Frame):
         self.draw()
         
     def draw(self):
-        self.bg = 'black'
-        if self.active:
-            self.bg = '#035'
         print 'video class files', len(self.files)
         img = Image.open(self.files[len(self.files)/2].filename)
         self.image = ImageTk.PhotoImage(img.resize((100, img.height * (100) / img.width), Image.ANTIALIAS))
@@ -33,7 +30,7 @@ class video_class(Frame):
                             highlightthickness = 0,
                             width=100+10,
                             height=10 + (img.height * (100) / img.width),
-                            bg=self.bg)
+                            bg='black')
         self.label.bind('<ButtonPress-1>', self.click)
         self.label.bind('<Enter>', self.enter)
         self.label.bind('<Leave>', self.leave)
@@ -44,5 +41,5 @@ class video_class(Frame):
     def enter(self, event):
         self.label.configure(bg='#acf')
     def leave(self, event):
-        self.label.configure(bg=self.bg)
+        self.label.configure(bg='black')
 # -----------------

@@ -18,12 +18,15 @@ class video_class(Frame):
         self.files = files
         self.root = root
         self.active = active
+        self.bg = 'black'
+        if active:
+            self.bg = '#005'
         self.draw()
         
     def draw(self):
         self.bg = 'black'
-        if self.active:
-            self.bg = '#035'
+        if active:
+            self.bg = '#005'
         print 'video class files', len(self.files)
         img = Image.open(self.files[len(self.files)/2].filename)
         self.image = ImageTk.PhotoImage(img.resize((100, img.height * (100) / img.width), Image.ANTIALIAS))
