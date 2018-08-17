@@ -1,0 +1,96 @@
+# ---------------------
+# GUI-related libraries 
+from  Tkinter import *
+import Tkinter, Tkconstants, tkFileDialog
+# -----------------
+# better fonts
+import ttk, tkFont
+# -----------------------
+# python image library
+from PIL import Image, ImageTk, ImageDraw, ExifTags
+# -----------------------
+# basic pythong libraries
+from math import *
+import os, sys, time, unicodedata, operator
+# -----------------------
+
+# ===================
+#   image bar class
+# ===================
+class image_bar_class(Frame):
+    def __init__(self, images, parent, root):
+        ###self.parent = parentself.fig = plt.figure()
+        self.root = root
+        self.parent = parent
+        self.images = images
+        self.line = None
+        self.zoom = 1.0
+        self.draw(images)
+        
+    def draw(self, images):
+        Frame.__init__(self, self.parent, bg='black')
+        self.image_canvas = []
+        self.scroll = Scrollbar(self, orient=HORIZONTAL)
+        self.scroll.pack(fill=X, side=BOTTOM, expand=FALSE)
+        self.canvas = Canvas(self, bd=0, highlightthickness=0, xscrollcommand=self.scroll.set, width=self.parent.winfo_width()*self.zoom)
+        self.canvas.pack(fill=BOTH, side=LEFT, expand=TRUE)
+        self.scroll.config(command=self.canvas.xview)
+        
+        height = self.parent.winfo_height() - 17
+        width = self.parent.winfo_width()
+        self.window_width = width
+        img = Image.open(images[0].filename)
+        image_width  = img.width * height / img.height
+        n = int(ceil(self.zoom * float(width) / float(image_width)))
+        column = 1
+        labels = []
+        print 'adding images'
+        for i in range(0, len(images), len(images)/n):
+            img = Image.open(images[i].filename)
+            img = img.resize((img.width * height / img.height, height), Image.ANTIALIAS)
+            self.image_canvas.append(ImageTk.PhotoImage(img))
+            labels.append(Label(self.canvas, image=self.image_canvas[-1], 
+                                ## text=repr(images[i].id),
+                                borderwidth=0,
+                                compound="center",
+                                highlightthickness = 0,
+                                padx=0,
+                                pady=0).grid(row=0, column=column))
+            column += 1
+        print 'packing it all up'
+        
+        
+        self.root.update_idletasks()
+        ## self.width = Frame.winfo_width(self)
+        
+        print 'updated width', self.window_width
+        
+    def click(self, event):
+        x = self.parent.winfo_pointerx() - self.parent.winfo_rootx()
+        percent = float(len(self.images))*float(x)/float(self.window_width)
+        print this.widget, event.widget, x, self.window_width, percent / float(len(self.images))
+        if (percent > len(self.images)):
+            percent = len(self.images)
+        elif (percent < 1):
+            percent = 1
+        ## self.canvas = Canvas(self)
+        ## self.canvas.pack(fill=BOTH, expand=1)
+        ## self.line = self.canvas.create_line(0, 10, 0, 10)
+        self.root.show_image(self.images[int(percent)-1])
+        self.root.update_idletasks()
+        
+    def wheel(self, event):
+        
+        print self.zoom, event.delta
+        self.zoom = self.zoom * event.delta
+        print self.zoom
+# -------------------
+
+# ================
+#   image class
+# ================
+class image_class():
+    def __init__(self, filename):
+        self.filename = filename
+        self.id = int(unicodedata.normalize('NFKD', filename).encode('ascii', 'ignore').split(".")[:-1][0])
+# -----------------

@@ -69,7 +69,7 @@ class root_gui_class(Tk):
         ## ------------------------------------
         ##  create paned window that should 
         ##      cover everything in view
-        self.window = PanedWindow(self, orient=VERTICAL, sashwidth=5, bg="#888888", opaqueresize=FALSE)
+        self.window = PanedWindow(self, orient=VERTICAL, sashwidth=5, bg="#ffffff", opaqueresize=FALSE)
         self.window.pack(fill=BOTH, expand=1)
         ## ------------------------------------
         
@@ -176,7 +176,6 @@ class root_gui_class(Tk):
         
     def splice(self, event):
         print 'splicing'
-        
     def add_video(self, files):
         img = Image.open(files[len(files)/2].filename)
         self.videos.append(ImageTk.PhotoImage(img.resize((self.clips.winfo_width()-50, img.height * (self.clips.winfo_width()-50) / img.width), Image.ANTIALIAS)))
@@ -185,16 +184,26 @@ class root_gui_class(Tk):
                           compound="center",
                           highlightthickness = 0,
                           padx=0,
-                          pady=0,))
+                          pady=0,
+                          width=150))
         self.video_labels[-1].pack(fill=X)
+                          
+    def clicker(self, event):
+        print 'something got clicked'
         
     def window_click(self, event):
+        print 'clicked'
         if event.widget is self.window:
+            print 'click in window'
             if self.resize == '':
                 pass
             else:
                 self.after_cancel(self.resize)
             self.resize = self.after(200, self.on_resize)
+        elif event.widget is self.timeline:
+            print 'clicked timeline'
+        elif event.widget is self.image_bar:
+            print 'clicked image bar'
         self.update_idletasks()
             
     def schedule_resize(self, event):
@@ -207,6 +216,7 @@ class root_gui_class(Tk):
             
             
     def on_resize(self):
+        print 'resizing called', self.resize, len(self.files)
         if (self.resize != ''):
             ## ------------------------------------
             ##  destroy and create new image_bar_class

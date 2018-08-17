@@ -23,8 +23,6 @@ import os, sys, time, unicodedata, operator
 import numpy as np
 # -----------------------
 from image_bar import *
-from image_class import *
-from video_class import *
 
 global video
 video = 'C:\Program Files\ffmpeg\bin\ffmpeg.exe'
@@ -51,7 +49,6 @@ class root_gui_class(Tk):
         self.files = []
         self.view_image = None
         self.videos = []
-        self.video_labels = []
         ## ------------------------------------
         
         ## ------------------------------------
@@ -74,25 +71,18 @@ class root_gui_class(Tk):
         ## ------------------------------------
         
         ## ------------------------------------
-        ##  add top area with image viewer and 
-        ##    clip explorer
+        ##  add middle viewer
         self.main = Frame(self.window, bg='black')
-        self.main.pack(fill=BOTH, expand=YES)
-        self.main.grid_rowconfigure(0, weight=1)
-        self.main.grid_columnconfigure(0, weight=1)
-        ## ------------------------------------
-        
-        ## ------------------------------------
-        ##    active image viewer
-        self.window.add(self.main, stretch='always')
-        self.viewer = Frame(self.main, bg='black', padx=5, pady=5)
+        self.main.pack(fill=BOTH, expand=TRUE)
+        self.window.add(self.main, stretch="always")
+        self.viewer = Frame(self.main, bg='black')
         Canvas(self.viewer)
         self.viewer.grid(row=0, column=0, sticky=NSEW)
         ## ------------------------------------
         
         ## ------------------------------------
-        ##     clip explorer
-        self.clips = Frame(self.main, bg='#555555', width=200, padx=5, pady=5)
+        ##  add middle viewer
+        self.clips = Frame(self.main, bg='grey', width=200)
         Canvas(self.clips)
         self.clips.grid(row=0, column=1, sticky=NSEW)
         ## ------------------------------------
@@ -100,19 +90,18 @@ class root_gui_class(Tk):
         ## ------------------------------------
         ##  add timeline viewer
         self.timeline = Frame(self.window, bg='black')
-        self.image_bar = Frame(self.timeline, bg='black')
-        self.image_bar.pack(fill=BOTH)
         self.window.add(self.timeline, height=75, stretch="never")
+        self.resize = ''
         ## ------------------------------------
         
         ## ------------------------------------
         ##  add binds for user interactions
-        self.resize = '' ### event handler to delay resizing so GUI doesn't get choked up
         self.window.bind('<B1-Motion>', self.window_click)
         self.bind('<Configure>', self.schedule_resize)
         ## ------------------------------------
 
     def load_directory(self):
+    
         ## ------------------------------------
         ##  load a new directory
         self.directory = tkFileDialog.askdirectory()
@@ -147,48 +136,34 @@ class root_gui_class(Tk):
                 
         self.image_bar = image_bar_class(self.files[-1], self.timeline, self)
         self.image_bar.pack(fill=BOTH)
-        ## self.bind('<B1-Motion>',  self.image_bar.click)
-        self.image_bar.bind('<MouseWheel>', self.image_bar.wheel)
-        ## ------------------------------------
-        
-        ## ------------------------------------
-        ##  update main viewer
         self.show_image(self.files[-1][len(self.files)/2])
         self.add_video(self.files[-1])
-        self.timeline.update()
+        self.main.update_idletasks()
         ## ------------------------------------
     
     def show_image(self, image):
         for widget in self.viewer.winfo_children():
             widget.destroy()
-        self.view_image_id = image.id
         self.view_image = ImageTk.PhotoImage(Image.open(image.filename))
-        self.view_image_label = Label(self.viewer, image=self.view_image,
+        Label(self.viewer, image=self.view_image,
                           borderwidth=0,
                           compound="center",
                           highlightthickness = 0,
                           padx=0,
-                          pady=0,
-                          bg='black',
-                          anchor=CENTER)
-        self.view_image_label.pack(fill=BOTH, expand=TRUE)
-        self.view_image_label.bind('<Button-3>', self.splice)
-        
-    def splice(self, event):
-        print 'splicing'
-        
+                          pady=0).pack(fill=BOTH)
+    
     def add_video(self, files):
         img = Image.open(files[len(files)/2].filename)
-        self.videos.append(ImageTk.PhotoImage(img.resize((self.clips.winfo_width()-50, img.height * (self.clips.winfo_width()-50) / img.width), Image.ANTIALIAS)))
-        self.video_labels.append(Label(self.clips, image=self.videos[-1],
+        self.videos.append(ImageTk.PhotoImage(img.resize((self.clips.winfo_width(), img.height * self.clips.winfo_width() / img.width), Image.ANTIALIAS)))
+        Label(self.clips, image=self.videos[-1],
                           borderwidth=0,
                           compound="center",
                           highlightthickness = 0,
                           padx=0,
-                          pady=0,))
-        self.video_labels[-1].pack(fill=X)
+                          pady=0).pack(fill=X)
         
     def window_click(self, event):
+        print 'event', event.x, event.y
         if event.widget is self.window:
             if self.resize == '':
                 pass
@@ -208,17 +183,12 @@ class root_gui_class(Tk):
             
     def on_resize(self):
         if (self.resize != ''):
-            ## ------------------------------------
-            ##  destroy and create new image_bar_class
+            for widget in self.timeline.winfo_children():
+                widget.destroy()
             if (len(self.files) > 0):
-                print 'creating new image_bar'
-                for widget in self.timeline.winfo_children():
-                    widget.destroy()
                 self.image_bar = image_bar_class(self.files[-1], self.timeline, self)
-                self.image_bar.pack(fill=BOTH)
-                ## self.bind('<B1-Motion>',  self.image_bar.click)
-            ## ------------------------------------
             self.resize = ''
+            self.main.update_idletasks()
 ## ====================================
 
 # ==========================
