@@ -1,0 +1,28 @@
+import numpy as np
+import cv as cv
+
+
+def white_balance(img):
+    result = cv.cvtColor(img, cv.COLOR_BGR2LAB)
+    avg_a = np.average(result[:, :, 1])
+    avg_b = np.average(result[:, :, 2])
+    result[:, :, 1] = result[:, :, 1] - ((avg_a - 128) * (result[:, :, 0] / 255.0) * 1.1)
+    result[:, :, 2] = result[:, :, 2] - ((avg_b - 128) * (result[:, :, 0] / 255.0) * 1.1)
+    result = cv.cvtColor(result, cv.COLOR_LAB2BGR)
+    return result
+    
+img = cv.imread('5976.jpg',0)
+    
+img2 = cv.imread('5976.jpg',0)
+
+# create a CLAHE object (Arguments are optional).
+clahe = cv.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+cl1 = clahe.apply(img)
+
+
+cv.imwrite('new.jpg',cl1)
+
+second = np.hstack((img, white_balance(img)))
+
+
+cv.imwrite('second.jpg', second)

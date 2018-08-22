@@ -37,14 +37,14 @@ class image_bar_class(Frame):
         image_width  = img.width * height / img.height
         n = max(1, int(ceil(self.zoom * float(width) / float(image_width))))
         
-        self.reel = Canvas(self, width=int(float(self.root.winfo_width())), height=self.parent.winfo_height())
+        self.reel = Canvas(self, width=int(float(self.root.winfo_width())), height=height, highlightthickness=0)
         self.scroll = Scrollbar(self, orient=HORIZONTAL, command=self.reel.xview)
                 
         self.reel.configure(xscrollcommand=self.scroll.set)
-        self.reel.configure(scrollregion=(0, 0, n*image_width, self.parent.winfo_height()))
+        self.reel.configure(scrollregion=(0, 0, n*image_width, height))
         
-        self.scroll.pack(fill=BOTH, expand=TRUE)
-        self.reel.pack(fill=Y, expand=TRUE)
+        self.reel.pack(fill=X, expand=TRUE)
+        self.scroll.pack(fill=X, expand=TRUE)
         
         self.roll = Frame(self.reel, bg='black')
         self.roll.pack(fill=BOTH, expand=TRUE)
@@ -69,8 +69,9 @@ class image_bar_class(Frame):
             self.labels[-1].grid(row=0, column=column)
             self.labels[-1].bind('<Button-1>', self.click)
             self.labels[-1].bind('<B1-Motion>', self.click)
-            self.labels[-1].bind('<B3-Motion>', self.wheel)
+            ## self.labels[-1].bind('<B3-Motion>', self.wheel)
             column += 1
+        self.reel.xview_moveto(0.5)
         
     def click(self, event):
         x = self.parent.winfo_pointerx() - self.parent.winfo_rootx()

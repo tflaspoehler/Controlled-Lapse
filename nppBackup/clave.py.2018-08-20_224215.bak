@@ -1,0 +1,25 @@
+import numpy as np
+import cv2
+
+
+def white_balance(img):
+    result = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    avg_a = np.average(result[:, :, 1])
+    avg_b = np.average(result[:, :, 2])
+    result[:, :, 1] = result[:, :, 1] - ((avg_a - 128) * (result[:, :, 0] / 255.0) * 1.1)
+    result[:, :, 2] = result[:, :, 2] - ((avg_b - 128) * (result[:, :, 0] / 255.0) * 1.1)
+    result = cv2.cvtColor(result, cv2.COLOR_LAB2BGR)
+    return result
+    
+img = cv2.imread('5976.jpg',0)
+    
+img2 = cv2.imread('5976.jpg',0)
+
+# create a CLAHE object (Arguments are optional).
+clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+cl1 = clahe.apply(img)
+
+
+cv2.imwrite('new.jpg',cl1)
+
+cv2.imwrite('second.jpg', white_balance(img2))

@@ -1,0 +1,12 @@
+# -----------------------
+import unicodedata
+# -----------------------
+
+# ================
+#   image class
+# ================
+class image_class():
+    def __init__(self, filename, directory):
+        self.filename = filename
+        self.directory = directory
+        self.id = int(unicodedata.normalize('NFKD', filename).encode('ascii', 'ignore').split(".")[:-1][0])

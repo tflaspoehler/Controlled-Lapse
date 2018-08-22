@@ -52,17 +52,37 @@ class root_gui_class(Tk):
         self.videos = []
         self.video_labels = []
         self.active_video = -1
+        self.zoom = 5.0
+        self.project = ''
+        self.file_save = ''
+        self.save_directory = os.getcwd()
         ## ------------------------------------
         
         ## ------------------------------------
         ## Menu Bar
         self.files = []
         self.menu_bar = Menu(self)
+        self.config(menu=self.menu_bar)
         # -- File Menu
         self.file_menu = Menu(self.menu_bar, tearoff=0)
-        self.menu_bar.add_command(label="Open",  command=lambda: self.load_directory())
-        self.menu_bar.add_command(label="Split", command=lambda: self.splice())
-        self.config(menu=self.menu_bar)
+        self.file_menu.add_command(label="New Project",  command=lambda: self.new_project())
+        self.file_menu.add_command(label="Load Project",  command=lambda: self.load_project())
+        self.file_menu.add_command(label="Save Project",  command=lambda: self.save_project())
+        self.file_menu.add_command(label="Save Project As",  command=lambda: self.save_project_as())
+        self.file_menu.add_command(label="Load Image Folder",  command=lambda: self.add_directory())
+        self.file_menu.add_command(label="Exit", command=self.quit)
+        self.menu_bar.add_cascade(label="File", menu=self.file_menu)
+        ## ------------------------------------
+        
+        ## ------------------------------------
+        ## Video Options
+        self.edit_menu = Menu(self.menu_bar, tearoff=0)
+        self.edit_menu.add_command(label="Split at Current Frame", command=lambda: self.splice())
+        self.edit_menu.add_command(label="Make Current Video", command=lambda: self.make())
+        self.edit_menu.add_command(label="Make All Videos", command=lambda: self.make_all())
+        self.menu_bar.add_cascade(label="Edit", menu=self.edit_menu)
+        self.menu_bar.add_command(label="+", command=lambda: self.zoom_in())
+        self.menu_bar.add_command(label="-", command=lambda: self.zoom_out())
         ## ------------------------------------
         
         ## ------------------------------------
@@ -101,7 +121,7 @@ class root_gui_class(Tk):
         self.timeline = Frame(self.window, bg='black')
         self.image_bar = Frame(self.timeline, bg='black')
         self.image_bar.pack(fill=BOTH)
-        self.window.add(self.timeline, height=75, stretch="never")
+        self.window.add(self.timeline, height=75, minsize=30, stretch="never")
         ## ------------------------------------=
         
         ## ------------------------------------
@@ -111,7 +131,64 @@ class root_gui_class(Tk):
         self.bind('<Configure>', self.schedule_resize)
         ## ------------------------------------
 
-    def load_directory(self):
+    def new_project(self):
+        ## ------------------------------------
+        ##  load a new directory
+        self.project = tkFileDialog.asksaveasfilename()
+        self.file_save = self.project
+        self.save_directory = os.path.dirname(self.file_save)
+        print 'file', self.project
+        ## ------------------------------------
+
+    def load_project(self):
+        ## ------------------------------------
+        ##  load a new directory
+        self.project = tkFileDialog.askopenfilename()
+        self.file_save = self.project
+        self.save_directory = os.path.dirname(self.file_save)
+        print 'opening file', self.project
+        ## ------------------------------------
+        f = open(self.project, 'r')
+        n_videos = int(f.readline().split()[-1])
+        print 'reading in', n_videos, 'clips'
+        ## ------------------------------------
+        self.files = []
+        self.videos = []
+        self.active_video = 0
+        for i in range(0, n_videos):
+            line = f.readline().split()
+            name = ' '.join(line[1:-4])
+            rate = int(line[-3])
+            frames = int(line[-1])
+            files = []
+            for j in range(0, frames):
+                line = f.readline().replace('\n','').replace('\r','').replace('\\\\','\\').split()[-1]
+                directory = os.path.dirname(line)
+                filename = os.path.basename(line)
+                file = image_class(filename, directory, id=j)
+                files.append(file)
+            self.files.append(files)
+            active = False
+            if i == 0:
+                active = True
+                print 'current directory', os.getcwd()
+                print 'changing directory', files[-1].directory
+                os.chdir(files[-1].directory)
+            self.videos.append(video_class(i, name, self.files[-1], self.clips, self, active, rate=rate))
+        ## ------------------------------------
+        
+
+    def save_project_as(self):
+        ## ------------------------------------
+        ##  load a new directory
+        self.file_save = tkFileDialog.asksaveasfilename()
+        self.save_directory = os.path.dirname(self.file_save)
+        self.project = self.file_save
+        print 'file', self.project
+        self.save_project()
+        ## ------------------------------------
+
+    def add_directory(self):
         ## ------------------------------------
         ##  load a new directory
         self.directory = tkFileDialog.askdirectory()
@@ -127,7 +204,7 @@ class root_gui_class(Tk):
                 ##  check for corrupt files
                 try:
                     ## Image.open(file)
-                    files.append(image_class(file))
+                    files.append(image_class(file, self.directory))
                 except:
                     print 'could not open', file
                 ## ----------------------------
@@ -145,7 +222,7 @@ class root_gui_class(Tk):
                 for widget in self.timeline.winfo_children():
                     widget.destroy()
                     
-            self.image_bar = image_bar_class(self.files[self.active_video], self.timeline, self)
+            self.image_bar = image_bar_class(self.files[self.active_video], self.timeline, self, zoom=self.zoom)
             self.image_bar.pack(fill=BOTH)
             ## self.bind('<B1-Motion>',  self.image_bar.click)
             self.image_bar.bind('<MouseWheel>', self.image_bar.wheel)
@@ -156,7 +233,7 @@ class root_gui_class(Tk):
             self.show_image(self.files[-1][len(self.files[-1])/2])
             print 'active video plus 1'
             self.active_video += 1
-            self.videos.append(video_class(self.active_video, self.files[self.active_video], self.clips, self, True))
+            self.videos.append(video_class(self.active_video, 'video ' + repr(self.active_video+1), self.files[self.active_video], self.clips, self, True))
             for widget in self.clips.winfo_children():
                 widget.destroy()
             for i in range(0, len(self.videos)):
@@ -184,11 +261,20 @@ class root_gui_class(Tk):
                           anchor=CENTER)
         self.view_image_label.pack(fill=BOTH, expand=TRUE)
         
+    def make(self):
+        if self.active_video > -1:
+            self.videos[self.active_video].make_video()
+        
+    def make_all(self):
+        if self.active_video > -1:
+            for i in range(0, len(self.videos)):
+                self.videos[i].make_video()
+            
     def splice(self):
         if self.active_video > -1:
             files = self.videos[self.active_video].files[self.view_image_id:]
             self.videos[self.active_video].files = self.videos[self.active_video].files[:self.view_image_id]
-            self.videos.insert(self.active_video+1, video_class(self.active_video+1, files, self.clips, self, True))
+            self.videos.insert(self.active_video+1, video_class(self.active_video+1, 'video ' + repr(self.active_video+2), files, self.clips, self, True))
             self.active_video += 1  
             for i in range(0, len(files)):
                 files[i].id = i
@@ -210,34 +296,60 @@ class root_gui_class(Tk):
                 print 'creating new image_bar'
                 for widget in self.timeline.winfo_children():
                     widget.destroy()
-                self.image_bar = image_bar_class(self.files[self.active_video], self.timeline, self)
+                self.image_bar = image_bar_class(self.files[self.active_video], self.timeline, self, zoom=self.zoom)
                 self.image_bar.pack(fill=BOTH)
                 ## self.bind('<B1-Motion>',  self.image_bar.click)
             ## ------------------------------------
     
-    def select_video(self, id):
-        print 'changing video', id
-        self.active_video = id
-        for widget in self.clips.winfo_children():
-            widget.destroy()
-        for i in range(0, len(self.videos)):
-            if i == self.active_video:
-                self.videos[i].active = True
-            else:
-                self.videos[i].active = False
-            self.videos[i].draw()
-        self.clips.update()
-        self.view_image_id = len(self.files[self.active_video])/2
+    def zoom_in(self):
+        self.zoom = self.zoom * 1.1
         ## ------------------------------------
         ##  destroy and create new image_bar_class
         if (len(self.files) > 0):
             print 'creating new image_bar'
             for widget in self.timeline.winfo_children():
                 widget.destroy()
-            self.image_bar = image_bar_class(self.files[self.active_video], self.timeline, self)
+            self.image_bar = image_bar_class(self.files[self.active_video], self.timeline, self, zoom=self.zoom)
             self.image_bar.pack(fill=BOTH)
             ## self.bind('<B1-Motion>',  self.image_bar.click)
         ## ------------------------------------
+    
+    def zoom_out(self):
+        self.zoom = self.zoom / 1.1
+        ## ------------------------------------
+        ##  destroy and create new image_bar_class
+        if (len(self.files) > 0):
+            print 'creating new image_bar'
+            for widget in self.timeline.winfo_children():
+                widget.destroy()
+            self.image_bar = image_bar_class(self.files[self.active_video], self.timeline, self, zoom=self.zoom)
+            self.image_bar.pack(fill=BOTH)
+            ## self.bind('<B1-Motion>',  self.image_bar.click)
+        ## ------------------------------------
+    
+    def select_video(self, id):
+        if self.active_video != id:
+            self.active_video = id
+            for widget in self.clips.winfo_children():
+                widget.destroy()
+            for i in range(0, len(self.videos)):
+                if i == self.active_video:
+                    self.videos[i].active = True
+                else:
+                    self.videos[i].active = False
+                self.videos[i].draw()
+            self.clips.update()
+            self.view_image_id = len(self.files[self.active_video])/2
+            ## ------------------------------------
+            ##  destroy and create new image_bar_class
+            if (len(self.files) > 0):
+                print 'creating new image_bar'
+                for widget in self.timeline.winfo_children():
+                    widget.destroy()
+                self.image_bar = image_bar_class(self.files[self.active_video], self.timeline, self, zoom=self.zoom)
+                self.image_bar.pack(fill=BOTH)
+                ## self.bind('<B1-Motion>',  self.image_bar.click)
+            ## ------------------------------------
     
     def window_click(self, event):
         if event.widget is self.window:
@@ -255,6 +367,15 @@ class root_gui_class(Tk):
             else:
                 self.after_cancel(self.resize)
             self.resize = self.after(200, self.on_resize)
+    
+    def save_project(self):
+        f = open(self.file_save, 'w')
+        f.write('clips: ' + repr(len(self.videos)) + '\n')
+        for video in self.videos:
+            f.write('name: ' + video.name + ' rate: ' + repr(video.rate) + ' frames: '+repr(len(video.files)) + '\n')
+            for file in video.files:
+                f.write('image: ' + file.directory.replace('/','\\') + '\\' + file.filename + '\n')
+        f.close()
             
             
     def on_resize(self):
@@ -265,7 +386,7 @@ class root_gui_class(Tk):
                 print 'creating new image_bar'
                 for widget in self.timeline.winfo_children():
                     widget.destroy()
-                self.image_bar = image_bar_class(self.files[self.active_video], self.timeline, self)
+                self.image_bar = image_bar_class(self.files[self.active_video], self.timeline, self, zoom=self.zoom)
                 self.image_bar.pack(fill=BOTH)
                 ## self.bind('<B1-Motion>',  self.image_bar.click)
             ## ------------------------------------
@@ -282,7 +403,7 @@ def main():
 
     # initialize GUI
     root = root_gui_class(event_caller)
-    root.load_directory()
+    ## root.add_directory()
 
     # start GUI mainloop
     root.mainloop()

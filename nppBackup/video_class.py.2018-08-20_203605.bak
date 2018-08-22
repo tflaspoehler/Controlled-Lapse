@@ -1,0 +1,84 @@
+# ---------------------
+# GUI-related libraries 
+from  Tkinter import *
+# -----------------------
+# python image library
+from PIL import Image, ImageTk, ImageDraw, ExifTags
+# -----------------------
+# all command line stuff
+import os, sys, subprocess
+# -----------------------
+
+# ===================
+#    video class
+# ===================
+
+class video_class(Frame):
+    def __init__(self, id, name, files, parent, root, active, rate=200):
+        self.id = id
+        self.name = name
+        self.parent = parent
+        self.files = files
+        self.root = root
+        self.active = active
+        self.draw()
+        
+    def draw(self):
+        self.bg = 'black'
+        if self.active:
+            self.bg = '#035'
+        print 'video class files', len(self.files)
+        img = Image.open(self.files[len(self.files)/2].filename)
+        self.image = ImageTk.PhotoImage(img.resize((100, img.height * (100) / img.width), Image.ANTIALIAS))
+        self.label = Label(self.parent, image=self.image,
+                            borderwidth=0,
+                            compound="center",
+                            highlightthickness = 0,
+                            width=100+10,
+                            height=10 + (img.height * (100) / img.width),
+                            bg=self.bg)
+        self.label.bind('<ButtonPress-1>', self.click)
+        self.label.bind('<Enter>', self.enter)
+        self.label.bind('<Leave>', self.leave)
+        self.label.pack(fill=X)
+        
+        self.name_var = StringVar()
+        self.name_var.set(self.name)
+        self.name_var.trace("w", self.name_call)
+        self.name_entry = Entry(self.parent, textvariable=self.name_var, bg=self.bg, fg='white', borderwidth=0, justify=CENTER)
+        self.name_entry.pack()
+        self.name_entry.focus_force()
+
+    def name_call(self, *args):
+        self.name = self.name_var.get()
+        
+    def click(self, event):
+        self.root.select_video(self.id)
+        
+    def enter(self, event):
+        if self.active:
+            self.label.configure(bg='#35b')
+        else:
+            self.label.configure(bg='#999')
+            
+    def leave(self, event):
+        self.label.configure(bg=self.bg)
+        
+    def make_video(self):
+        command = r'C:\Program Files\ffmpeg\bin\ffmpeg.exe'
+        try:
+            bash = subprocess.check_output([command], shell=True)
+            print bash
+        except:
+            pass
+            
+        command = ['mklink', self.files[0].directory + self.files[0].filename, '0.jpg']
+        print 'link command:      ', command
+        print 'current directory: ', self.files[0].directory.replace('/','\\') 
+        try:
+            bash = subprocess.check_output(command, shell=True)
+            print bash
+        except:
+            pass
+        ##bash = subprocess.Popen([command], shell=True)
+# -----------------
