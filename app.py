@@ -196,15 +196,18 @@ class root_gui_class(Tk):
         ## ------------------------------------
         
         ## ------------------------------------
-        ##  get a list of jpgs 
+        ##  get a list of images 
         files = []
         for file in os.listdir(self.directory):
-            if '.jpg' in file:
+            if '.jpg' in file or '.png' in file:
                 ## ----------------------------
                 ##  check for corrupt files
                 try:
                     ## Image.open(file)
-                    files.append(image_class(file, self.directory))
+                    if file.split('.')[0].isdigit():
+                        files.append(image_class(file, self.directory, id=int(file.split('.')[0])))
+                    else:
+                        files.append(image_class(file, self.directory))
                 except:
                     print 'could not open', file
                 ## ----------------------------

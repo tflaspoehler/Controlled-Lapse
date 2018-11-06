@@ -73,7 +73,10 @@ class video_class(Frame):
         self.label.configure(bg=self.bg)
         
     def make_video(self):
-    
+        images = ""
+        for file in self.files:
+            images += " " + file.filename
+        print 'saving images', images
         rtndir = os.getcwd()
         tmpdir = tempfile.gettempdir()  + '\\test' + '\\video' + repr(self.id)
         
@@ -92,20 +95,29 @@ class video_class(Frame):
             print bash
         except:
             pass
-       
+        
+        offset = 30
+        if self.scale.get() > 30:
+            offset = 1
+        index = 1
+        zeros = 8
         for i in range(1, len(self.files)+1):
-            command = ['mklink', tmpdir  + '\\' + str(i) + '.jpg', self.files[i-1].directory.replace('/','\\') + '\\' + self.files[i-1].filename]
-            try:
-                bash = subprocess.check_output(command, shell=True)
-                ## print bash
-            except:
-                pass
+            for j in range(0, offset):
+                link_name = str(index)
+                link_name = "0" * (zeros-len(link_name))+ link_name
+                command = ['mklink', tmpdir  + '\\' + link_name + '.' + self.files[i-1].filename.split('.')[-1], self.files[i-1].directory.replace('/','\\') + '\\' + self.files[i-1].filename]
+                index += 1
+                try:
+                    bash = subprocess.check_output(command, shell=True)
+                    ## print bash
+                except:
+                    pass
                 
         command = 'ffmpeg'
         
         os.chdir(tmpdir)
         print 'changed directory to', tmpdir
-        command = [command, '-r', repr(self.scale.get()),  '-start_number', '1', '-i', '%d.jpg', '-b', '8000k', '-vcodec', 'libx264', '-pix_fmt', 'yuv420p',  self.name.replace(' ','.') + '.avi']
+        command = [command, '-r', repr(self.scale.get()*offset),  '-start_number', '1', '-i', '%0'+repr(zeros)+'d.' + self.files[0].filename.split('.')[-1], '-b', '8000k', '-vcodec', 'libx264', '-pix_fmt', 'yuv420p',  self.name.replace(' ','.') + '.avi']
         print 'ffmpeg command:      ', command
         
         try:
